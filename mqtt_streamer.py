@@ -8,16 +8,20 @@ from multiprocessing import Process
 
 # Raspberry PI IP address
 MQTT_BROKER = "140.113.179.82"
+FRAME_X = 320
+FRAME_Y = 240
+COMPRESS_QUALITY = 10
+
 
 
 def post_streamer():
-    encoding_parameters = [int(cv.IMWRITE_JPEG_QUALITY), 10]
+    encoding_parameters = [int(cv.IMWRITE_JPEG_QUALITY), COMPRESS_QUALITY]
     # Topic on which frame will be published
     MQTT_SEND = "video/streamer"
     # Object to capture the frames
     cap = cv.VideoCapture(0)
-    cap.set(3, 320)
-    cap.set(4, 240)
+    cap.set(3, FRAME_X)
+    cap.set(4, FRAME_Y)
     # Phao-MQTT Clinet
     client = mqtt.Client()
     # Establishing Connection with the Broker
@@ -36,7 +40,7 @@ def post_streamer():
             end = time.time()
             t = end - start
             fps = 1/t
-            print(fps)
+            #print(fps)
     except:
         cap.release()
         client.disconnect()
@@ -48,7 +52,8 @@ def get_gamer():
     MQTT_RECEIVE = "video/gamer"
     gamer_not_ready = True
     global frame 
-    frame = np.zeros((240, 320, 3), np.uint8)
+    frame = cv.imread('first_frame.jpg')
+    frame = cv.resize(frame, (FRAME_X, FRAME_Y), interpolation=cv.INTER_AREA)
     #frame = Queue()
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(client, userdata, flags, rc):

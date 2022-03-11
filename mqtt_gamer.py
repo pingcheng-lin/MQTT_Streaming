@@ -4,16 +4,24 @@ import paho.mqtt.client as mqtt
 import base64
 import time
 
-encoding_parameters = [int(cv.IMWRITE_JPEG_QUALITY), 10]
-
 # Raspberry PI IP address
 MQTT_BROKER = "140.113.179.82"
+FRAME_X = 320
+FRAME_Y = 240
+COMPRESS_QUALITY = 10
+encoding_parameters = [int(cv.IMWRITE_JPEG_QUALITY), COMPRESS_QUALITY]
+
+
+
 # Topic on which frame will be published
 MQTT_SEND = "video/gamer"
 # Object to capture the frames
 cap = cv.VideoCapture(0)
-cap.set(3, 320)
-cap.set(4, 240)
+cap.set(3, FRAME_X)
+cap.set(4, FRAME_Y)
+
+
+
 # Phao-MQTT Clinet
 client = mqtt.Client()
 # Establishing Connection with the Broker
@@ -32,7 +40,7 @@ try:
     end = time.time()
     t = end - start
     fps = 1/t
-    print(fps)
+    #print(fps)
 except:
   cap.release()
   client.disconnect()

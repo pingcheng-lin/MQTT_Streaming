@@ -5,12 +5,17 @@ import paho.mqtt.client as mqtt
 from multiprocessing import Process
 
 MQTT_BROKER = "140.113.179.82"
+FRAME_X = 320
+FRAME_Y = 240
+COMPRESS_QUALITY = 10
+
 
 
 def get_streamer():
     MQTT_RECEIVE = "video/streamer"
     global frame 
-    frame = np.zeros((240, 320, 3), np.uint8)
+    frame = cv.imread('first_frame.jpg')
+    frame = cv.resize(frame, (FRAME_X, FRAME_Y), interpolation=cv.INTER_AREA)
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(client, userdata, flags, rc):
         print("Connected with result code "+str(rc))
@@ -50,7 +55,8 @@ def get_gamer():
     MQTT_RECEIVE = "video/gamer"
     gamer_not_ready = True
     global frame 
-    frame = np.zeros((240, 320, 3), np.uint8)
+    frame = cv.imread('first_frame.jpg')
+    frame = cv.resize(frame, (FRAME_X, FRAME_Y), interpolation=cv.INTER_AREA)
     #frame = Queue()
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(client, userdata, flags, rc):
