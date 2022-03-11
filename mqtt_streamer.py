@@ -80,7 +80,7 @@ def get_gamer():
     # Starting thread which will receive the frames
     client.loop_start()
     while True:
-        cv.imshow("Gamer_Stream", frame)
+        cv.imshow("Streamer: from gamer", frame)
         if cv.waitKey(1) & 0xFF == ord('q'):
             break
     # Stop the Thread
