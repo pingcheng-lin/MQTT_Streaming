@@ -73,7 +73,6 @@ def get_gamer():
     global frame 
     frame = cv.imread('wait_for_gamer.jpg')
     frame = cv.resize(frame, (FRAME_X, FRAME_Y), interpolation=cv.INTER_AREA)
-    #frame = Queue()
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(client, userdata, flags, rc):
         print("Connected with result code "+str(rc))
@@ -160,15 +159,15 @@ if __name__ == '__main__':
     label_image = tk.Label(div1, bg='orange', image=imgTk)
     label_image.grid(column=0, row=0, sticky=align_mode)
 
-    myFont1 = font.Font(family='Helvetica', size=30, weight='bold', slant="italic")
-    label_text = tk.Label(div2, bg='orange', text='Streamer', font=myFont1)
+    myFont1 = font.Font(family='Helvetica', size=20, weight='bold', slant="italic")
+    label_text = tk.Button(div2, text="Streamer Ready", font=myFont1, bg='#ff0101', fg='#ffffff', width=30, command=window.destroy)
     label_text.grid(column=0, row=0, sticky=align_mode)
 
     myFont2 = font.Font(family='Helvetica', size=15, weight='bold')
     btn_camera = tk.Button(div3, text="Set to Camera Stream", font=myFont2, bg='#0052cc', fg='#ffffff', width=22, command=Set_to_camara_mode)
     btn_screen = tk.Button(div3, text="Set to Screen Sharing", font=myFont2, bg='#0052cc', fg='#ffffff', width=22, command=Set_to_screen_share_mode)
     btn_camera.grid(column=0, row=0)
-    btn_screen.grid(column=1, row=0)
+    btn_screen.grid(column=1, row=0)        
 
     window.mainloop()
 

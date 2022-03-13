@@ -1,7 +1,6 @@
 # Importing Libraries
 import tkinter as tk
 import tkinter.font as font
-from turtle import color
 import pyautogui
 import cv2 as cv
 import numpy as np
@@ -117,8 +116,8 @@ if __name__ == '__main__':
     label_image = tk.Label(div1, bg='orange', image=imgTk)
     label_image.grid(column=0, row=0, sticky=align_mode)
 
-    myFont1 = font.Font(family='Helvetica', size=30, weight='bold', slant="italic")
-    label_text = tk.Label(div2, bg='orange', text='Gamer', font=myFont1)
+    myFont1 = font.Font(family='Helvetica', size=20, weight='bold', slant="italic")
+    label_text = tk.Button(div2, text="Gamer Ready", font=myFont1, bg='#ff0101', fg='#ffffff', width=30, command=window.destroy)
     label_text.grid(column=0, row=0, sticky=align_mode)
 
     myFont2 = font.Font(family='Helvetica', size=15, weight='bold')

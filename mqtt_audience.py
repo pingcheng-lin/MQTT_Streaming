@@ -11,7 +11,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-x", "--axisX", help="Set the frame width", dest="Axis_X", default="320")
-#parser.add_argument("-y", "--axisY", help="Set the frame hight", dest="opt", default="240")
+parser.add_argument("-y", "--axisY", help="Set the frame hight", dest="Axis_Y", default="240")
 args = parser.parse_args()
 
 
@@ -66,11 +66,9 @@ def get_streamer():
 
 def get_gamer():
     MQTT_RECEIVE = "video/gamer"
-    gamer_not_ready = True
     global frame 
     frame = cv.imread('wait_for_gamer.jpg')
     frame = cv.resize(frame, (FRAME_X, FRAME_Y), interpolation=cv.INTER_AREA)
-    #frame = Queue()
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(client, userdata, flags, rc):
         print("Connected with result code "+str(rc))
@@ -154,8 +152,8 @@ if __name__ == '__main__':
     label_image = tk.Label(div1, bg='orange', image=imgTk)
     label_image.grid(column=0, row=0, sticky=align_mode)
 
-    myFont1 = font.Font(family='Helvetica', size=30, weight='bold', slant="italic")
-    label_text = tk.Label(div2, bg='orange', text='Audience', font=myFont1)
+    myFont1 = font.Font(family='Helvetica', size=20, weight='bold', slant="italic")
+    label_text = tk.Button(div2, text="Audience Ready", font=myFont1, bg='#ff0101', fg='#ffffff', width=30, command=window.destroy)
     label_text.grid(column=0, row=0, sticky=align_mode)
 
     window.mainloop()
