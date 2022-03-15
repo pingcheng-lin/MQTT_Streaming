@@ -5,20 +5,23 @@ import base64
 import cv2 as cv
 import numpy as np
 import paho.mqtt.client as mqtt
+import argparse
 from multiprocessing import Process
 from PIL import Image, ImageTk
-import argparse
+from ping3 import ping
+import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-x", "--axisX", help="Set the frame width", dest="Axis_X", default="320")
-parser.add_argument("-y", "--axisY", help="Set the frame hight", dest="Axis_Y", default="240")
+parser.add_argument("-x", "--axisX", help="Set the frame width", type=int, dest="Axis_X", default=800)
+parser.add_argument("-y", "--axisY", help="Set the frame hight", type=int,dest="Axis_Y", default=600)
+parser.add_argument("-p", "--ping", help="Set to ping test mode", type=bool,dest="Ping_test", default=False)
 args = parser.parse_args()
 
 
 MQTT_BROKER = "140.113.179.82"
-FRAME_X = 512
-FRAME_Y = 480
-COMPRESS_QUALITY = 10
+FRAME_X = int(args.Axis_X)
+FRAME_Y = int(args.Axis_Y)
+PING_TEST_MODE = bool(args.Ping_test)
 
 
 
@@ -44,7 +47,7 @@ def get_streamer():
         # converting into numpy array from buffer
         npimg = np.frombuffer(img, dtype=np.uint8)
         # Decode to Original Frame
-        frame = cv.imdecode(npimg, 1)
+        frame = cv.resize(cv.imdecode(npimg, 1), (FRAME_X, FRAME_Y), interpolation=cv.INTER_NEAREST)
 
 
     client = mqtt.Client()
@@ -86,7 +89,7 @@ def get_gamer():
         # converting into numpy array from buffer
         npimg = np.frombuffer(img, dtype=np.uint8)
         # Decode to Original Frame
-        frame = cv.imdecode(npimg, 1)
+        frame = cv.resize(cv.imdecode(npimg, 1), (FRAME_X, FRAME_Y), interpolation=cv.INTER_LANCZOS4)
         
 
 
@@ -122,9 +125,15 @@ def define_layout(obj, cols=1, rows=1):
         trg = obj
         method(trg, cols, rows)
 
-def hi():
-    print(hi)
+def ping_test():
+    if PING_TEST_MODE == True:
+        delay = []
+        for i in range(1, 100):
+            delay.append(ping(MQTT_BROKER, unit='ms'))
 
+        plt.plot(delay)
+        plt.show()
+        
 
 
 if __name__ == '__main__':
@@ -158,10 +167,13 @@ if __name__ == '__main__':
 
     window.mainloop()
 
-    p1= Process(target = get_streamer)
-    p2= Process(target = get_gamer)
+    p1 = Process(target = get_streamer)
+    p2 = Process(target = get_gamer)
+    p3 = Process(target = ping_test)
     p1.start()
     p2.start()
+    p3.start()
 
     p1.join()
     p2.join()
+    p3.join()

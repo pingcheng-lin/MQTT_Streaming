@@ -6,9 +6,16 @@ import cv2 as cv
 import numpy as np
 import paho.mqtt.client as mqtt
 import base64
+import argparse
 import time
 from multiprocessing import Process
 from PIL import Image, ImageTk
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-x", "--axisX", help="Set the frame width", type=int, dest="Axis_X", default=800)
+parser.add_argument("-y", "--axisY", help="Set the frame hight", type=int, dest="Axis_Y", default=600)
+parser.add_argument("-q", "--quality", help="Set the frame quality", type=int, dest="frame_quality", default=90)
+args = parser.parse_args()
 
 # Constant
 CAMARA_STREAM = int(1)
@@ -16,9 +23,9 @@ SCREEN_SHARE_STREAM = int(2)
 STREAM_MODE = CAMARA_STREAM
 
 MQTT_BROKER = "140.113.179.82"
-FRAME_X = 320
-FRAME_Y = 240 
-COMPRESS_QUALITY = 10
+FRAME_X = int(args.Axis_X)
+FRAME_Y = int(args.Axis_Y)
+COMPRESS_QUALITY = int(args.frame_quality)
 
 
 
@@ -50,7 +57,7 @@ def post_streamer(MODE):
                 screen = pyautogui.screenshot()
                 frame = np.array(screen)
                 frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
-                frame = cv.resize(frame, (FRAME_X, FRAME_Y), interpolation=cv.INTER_AREA)
+                frame = cv.resize(frame, (FRAME_X, FRAME_Y), interpolation=cv.INTER_NEAREST)
             # Encoding the Frame
             _, buffer = cv.imencode('.jpg', frame, encoding_parameters)
             # Converting into encoded bytes
@@ -89,7 +96,7 @@ def get_gamer():
         # converting into numpy array from buffer
         npimg = np.frombuffer(img, dtype=np.uint8)
         # Decode to Original Frame
-        frame = cv.imdecode(npimg, 1)
+        frame = cv.resize(cv.imdecode(npimg, 1), (FRAME_X, FRAME_Y), interpolation=cv.INTER_NEAREST)
 
     client = mqtt.Client()
     client.on_connect = on_connect
