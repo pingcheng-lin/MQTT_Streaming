@@ -10,6 +10,7 @@ from multiprocessing import Process
 from PIL import Image, ImageTk
 from ping3 import ping
 import matplotlib.pyplot as plt
+import logging
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-x", "--axisX", help="Set the frame width", type=int, dest="Axis_X", default=800)
@@ -22,6 +23,9 @@ MQTT_BROKER = "140.113.179.82"
 FRAME_X = int(args.Axis_X)
 FRAME_Y = int(args.Axis_Y)
 PING_TEST_MODE = bool(args.Ping_test)
+
+FORMAT = '%(asctime)s %(levelname)s: %(message)s'
+logging.basicConfig(level=logging.DEBUG, filename='audience.log', filemode='w', format=FORMAT)
 
 
 
@@ -47,7 +51,8 @@ def get_streamer():
         # converting into numpy array from buffer
         npimg = np.frombuffer(img, dtype=np.uint8)
         # Decode to Original Frame
-        frame = cv.resize(cv.imdecode(npimg, 1), (FRAME_X, FRAME_Y), interpolation=cv.INTER_NEAREST)
+        frame = cv.resize(cv.imdecode(npimg, 1), (FRAME_X, FRAME_Y), interpolation=cv.INTER_AREA)
+        logging.info("get message")
 
 
     client = mqtt.Client()
@@ -59,7 +64,7 @@ def get_streamer():
     # Starting thread which will receive the frames
     client.loop_start()
     while True:
-        cv.imshow("Audience: from streamer", frame)
+        cv.imshow("Audience: from streamer  <Press Q to exit>", frame)
         if cv.waitKey(1) & 0xFF == ord('q'):
             break
     # Stop the Thread
@@ -89,7 +94,7 @@ def get_gamer():
         # converting into numpy array from buffer
         npimg = np.frombuffer(img, dtype=np.uint8)
         # Decode to Original Frame
-        frame = cv.resize(cv.imdecode(npimg, 1), (FRAME_X, FRAME_Y), interpolation=cv.INTER_LANCZOS4)
+        frame = cv.resize(cv.imdecode(npimg, 1), (FRAME_X, FRAME_Y), interpolation=cv.INTER_AREA)
         
 
 
@@ -102,7 +107,7 @@ def get_gamer():
     # Starting thread which will receive the frames
     client.loop_start()
     while True:
-        cv.imshow("Audience: from gamer", frame)
+        cv.imshow("Audience: from gamer  <Press Q to exit>", frame)
         if cv.waitKey(1) & 0xFF == ord('q'):
             break
     # Stop the Thread
