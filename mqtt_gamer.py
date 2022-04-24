@@ -44,7 +44,7 @@ def post_gamer():
 
     # Object to capture the frames
     if mode == CAMARA_STREAM:
-        cap = cv.VideoCapture(0, cv.CAP_DSHOW)
+        cap = cv.VideoCapture(0)
         cap.set(3, FRAME_X)
         cap.set(4, FRAME_Y)
 
@@ -197,4 +197,3 @@ if __name__ == '__main__':
 
     p1.join()
     p2.join()
-    cv.destroyAllWindows()
