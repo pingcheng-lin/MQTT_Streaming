@@ -9,6 +9,7 @@ import base64
 import argparse
 import logging
 import queue
+import pyaudio
 from multiprocessing import Process
 from PIL import Image, ImageTk
 
@@ -32,7 +33,8 @@ FRAME_Y = int(args.Axis_Y)
 COMPRESS_QUALITY = int(args.frame_quality)
 
 
-def post_gamer(MODE):
+def post_gamer():
+    mode = STREAM_MODE
     encoding_parameters = [int(cv.IMWRITE_JPEG_QUALITY), COMPRESS_QUALITY]
     # Topic on which frame will be published
     MQTT_SEND = "video/gamer"
@@ -41,8 +43,8 @@ def post_gamer(MODE):
     aging = int(0)
 
     # Object to capture the frames
-    if MODE == CAMARA_STREAM:
-        cap = cv.VideoCapture(0)
+    if mode == CAMARA_STREAM:
+        cap = cv.VideoCapture(0, cv.CAP_DSHOW)
         cap.set(3, FRAME_X)
         cap.set(4, FRAME_Y)
 
@@ -65,9 +67,9 @@ def post_gamer(MODE):
     try:
         while True:
             # Read Frame
-            if MODE == CAMARA_STREAM:
+            if mode == CAMARA_STREAM:
                 _, frame = cap.read()
-            elif MODE == SCREEN_SHARE_STREAM:
+            elif mode == SCREEN_SHARE_STREAM:
                 screen = pyautogui.screenshot()
                 frame = np.array(screen)
                 frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
@@ -97,11 +99,35 @@ def post_gamer(MODE):
     except:
         cap.release()
         client.disconnect()
-        logging.ERROR("Now you can restart fresh")
+        logging.error("Now you can restart fresh")
 
+def post_gamer_audio():
+    # Topic on which frame will be published
+    MQTT_SEND = "audio/gamer"
+
+    def on_publish(client, userdata, mid):
+        pass
+
+    # Phao-MQTT Clinet
+    client = mqtt.Client()
+    # Establishing Connection with the Broker
+    client.connect(MQTT_BROKER, 10127, 60)
+    client.on_publish = on_publish
+
+    audio = pyaudio.PyAudio()
+    audio_format=pyaudio.paInt16
+    channels=1
+    rate=44100
+    frame_chunk=4096
+    stream = audio.open(format=audio_format, channels=channels, rate=rate, input=True, output=True, frames_per_buffer=frame_chunk)
+    while True:
+        data = stream.read(frame_chunk)
+        # stream.write(data)
+        audio_as_text = base64.b64encode(data)
+        client.publish(MQTT_SEND, audio_as_text)
 
 def define_layout(obj, cols=1, rows=1):
-    
+
     def method(trg, col, row):
         
         for c in range(cols):    
@@ -164,7 +190,11 @@ if __name__ == '__main__':
     window.mainloop()
 
     # Start Streaming
-    p1= Process(target = post_gamer(STREAM_MODE))
+    p1 = Process(target = post_gamer)
+    p2 = Process(target = post_gamer_audio)
     p1.start()
+    p2.start()
 
     p1.join()
+    p2.join()
+    cv.destroyAllWindows()

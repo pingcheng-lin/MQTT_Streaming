@@ -9,6 +9,7 @@ import base64
 import argparse
 import logging
 import queue
+import pyaudio
 from multiprocessing import Process
 from PIL import Image, ImageTk
 
@@ -100,9 +101,32 @@ def post_streamer(MODE):
     except:
         cap.release()
         client.disconnect()
-        logging.ERROR("Now you can restart fresh")
+        logging.error("Now you can restart fresh")
 
+def post_streamer_audio():
+    # Topic on which frame will be published
+    MQTT_SEND = "audio/streamer"
 
+    def on_publish(client, userdata, mid):
+        pass
+
+    # Phao-MQTT Clinet
+    client = mqtt.Client()
+    # Establishing Connection with the Broker
+    client.connect(MQTT_BROKER, 10127, 60)
+    client.on_publish = on_publish
+
+    audio = pyaudio.PyAudio()
+    audio_format=pyaudio.paInt16
+    channels=1
+    rate=44100
+    frame_chunk=4096
+    stream = audio.open(format=audio_format, channels=channels, rate=rate, input=True, output=True, frames_per_buffer=frame_chunk)
+    while True:
+        data = stream.read(frame_chunk)
+        # stream.write(data)
+        audio_as_text = base64.b64encode(data)
+        client.publish(MQTT_SEND, audio_as_text)
 
 def get_gamer():
     MQTT_RECEIVE = "video/gamer"
@@ -142,7 +166,44 @@ def get_gamer():
     # Stop the Thread
     client.loop_stop()
 
+def get_gamer_audio():
+    MQTT_RECEIVE = "audio/gamer"
+    def on_connect(client, userdata, flags, rc):
+        print("Connected with result code "+str(rc))
 
+        # Subscribing in on_connect() means that if we lose the connection and
+        # reconnect then subscriptions will be renewed.
+        client.subscribe(MQTT_RECEIVE)
+
+    global data
+    data = None
+    # The callback for when a PUBLISH message is received from the server.
+    def on_message(client, userdata, msg):
+        global data
+        # Decoding the message
+        data = base64.b64decode(msg.payload)
+
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    client.connect(MQTT_BROKER, 10127, 60)
+
+    audio = pyaudio.PyAudio()
+    audio_format=pyaudio.paInt16
+    channels=1
+    rate=44100
+    frame_chunk=4096
+    stream = audio.open(format=audio_format, channels=channels, rate=rate, output=True, frames_per_buffer=frame_chunk)
+    # Starting thread which will receive the frames
+    client.loop_start()
+    while True:
+        if(data != None):
+            stream.write(data)
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            break
+    # Stop the Thread
+    client.loop_stop()
 
 def define_layout(obj, cols=1, rows=1):
     
@@ -209,9 +270,16 @@ if __name__ == '__main__':
 
     #Start Streaming
     p1= Process(target = get_gamer)
+    p1_audio = Process(target = get_gamer_audio)
     p2= Process(target = post_streamer, args=(STREAM_MODE,))
+    p2_audio = Process(target = post_streamer_audio)
+
     p1.start()
+    p1_audio.start()
     p2.start()
+    p2_audio.start()
 
     p1.join()
+    p1_audio.join()
     p2.join()
+    p2_audio.join()

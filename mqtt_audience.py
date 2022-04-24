@@ -11,6 +11,7 @@ from PIL import Image, ImageTk
 from ping3 import ping
 import matplotlib.pyplot as plt
 import logging
+import pyaudio
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-x", "--axisX", help="Set the frame width", type=int, dest="Axis_X", default=800)
@@ -70,7 +71,44 @@ def get_streamer():
     # Stop the Thread
     client.loop_stop()
 
-    
+def get_streamer_audio():
+    MQTT_RECEIVE = "audio/streamer"
+    def on_connect(client, userdata, flags, rc):
+        print("Connected with result code "+str(rc))
+
+        # Subscribing in on_connect() means that if we lose the connection and
+        # reconnect then subscriptions will be renewed.
+        client.subscribe(MQTT_RECEIVE)
+
+    global data
+    data = None
+    # The callback for when a PUBLISH message is received from the server.
+    def on_message(client, userdata, msg):
+        global data
+        # Decoding the message
+        data = base64.b64decode(msg.payload)
+
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    client.connect(MQTT_BROKER, 10127, 60)
+
+    audio = pyaudio.PyAudio()
+    audio_format=pyaudio.paInt16
+    channels=1
+    rate=44100
+    frame_chunk=4096
+    stream = audio.open(format=audio_format, channels=channels, rate=rate, output=True, frames_per_buffer=frame_chunk)
+    # Starting thread which will receive the frames
+    client.loop_start()
+    while True:
+        if(data != None):
+            stream.write(data)
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            break
+    # Stop the Thread
+    client.loop_stop()
 
 def get_gamer():
     MQTT_RECEIVE = "video/gamer"
@@ -113,6 +151,44 @@ def get_gamer():
     # Stop the Thread
     client.loop_stop()
 
+def get_gamer_audio():
+    MQTT_RECEIVE = "audio/gamer"
+    def on_connect(client, userdata, flags, rc):
+        print("Connected with result code "+str(rc))
+
+        # Subscribing in on_connect() means that if we lose the connection and
+        # reconnect then subscriptions will be renewed.
+        client.subscribe(MQTT_RECEIVE)
+
+    global data
+    data = None
+    # The callback for when a PUBLISH message is received from the server.
+    def on_message(client, userdata, msg):
+        global data
+        # Decoding the message
+        data = base64.b64decode(msg.payload)
+
+    client = mqtt.Client()
+    client.on_connect = on_connect
+    client.on_message = on_message
+
+    client.connect(MQTT_BROKER, 10127, 60)
+
+    audio = pyaudio.PyAudio()
+    audio_format=pyaudio.paInt16
+    channels=1
+    rate=44100
+    frame_chunk=4096
+    stream = audio.open(format=audio_format, channels=channels, rate=rate, output=True, frames_per_buffer=frame_chunk)
+    # Starting thread which will receive the frames
+    client.loop_start()
+    while True:
+        if(data != None):
+            stream.write(data)
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            break
+    # Stop the Thread
+    client.loop_stop()
 
 
 def define_layout(obj, cols=1, rows=1):
@@ -173,12 +249,18 @@ if __name__ == '__main__':
     window.mainloop()
 
     p1 = Process(target = get_streamer)
+    p1_audio = Process(target = get_streamer_audio)
     p2 = Process(target = get_gamer)
+    p2_audio = Process(target = get_gamer_audio)
     p3 = Process(target = ping_test)
     p1.start()
+    p1_audio.start()
     p2.start()
+    p2_audio.start()
     p3.start()
 
     p1.join()
+    p1_audio.join()
     p2.join()
+    p2_audio.join()
     p3.join()
