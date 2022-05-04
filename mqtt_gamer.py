@@ -118,13 +118,19 @@ def post_gamer_audio():
     audio_format=pyaudio.paInt16
     channels=1
     rate=44100
-    frame_chunk=4096
-    stream = audio.open(format=audio_format, channels=channels, rate=rate, input=True, output=True, frames_per_buffer=frame_chunk)
-    while True:
-        data = stream.read(frame_chunk)
-        # stream.write(data)
-        audio_as_text = base64.b64encode(data)
-        client.publish(MQTT_SEND, audio_as_text)
+    frame_chunk=1024
+    stream = audio.open(format=audio_format, channels=channels, rate=rate, input=True, frames_per_buffer=frame_chunk)
+    try: 
+        while True:
+            data = stream.read(frame_chunk)
+            audio_as_text = base64.b64encode(data)
+            result = client.publish(MQTT_SEND, audio_as_text)
+            if result[0] == 4:
+                client.reconnect()
+    except KeyboardInterrupt:
+        stream.stop_stream()
+        stream.close()
+        audio.terminate()
 
 def define_layout(obj, cols=1, rows=1):
 

@@ -80,13 +80,14 @@ def get_streamer_audio():
         # reconnect then subscriptions will be renewed.
         client.subscribe(MQTT_RECEIVE)
 
-    global data
-    data = None
+    global chunks
+    chunks = []
     # The callback for when a PUBLISH message is received from the server.
     def on_message(client, userdata, msg):
-        global data
+        global chunks
         # Decoding the message
         data = base64.b64decode(msg.payload)
+        chunks.append(data)
 
     client = mqtt.Client()
     client.on_connect = on_connect
@@ -98,15 +99,18 @@ def get_streamer_audio():
     audio_format=pyaudio.paInt16
     channels=1
     rate=44100
-    frame_chunk=4096
+    frame_chunk=1024
     stream = audio.open(format=audio_format, channels=channels, rate=rate, output=True, frames_per_buffer=frame_chunk)
     # Starting thread which will receive the frames
     client.loop_start()
-    while True:
-        if(data != None):
-            stream.write(data)
-        if cv.waitKey(1) & 0xFF == ord('q'):
-            break
+    try:
+        while True:
+            if len(chunks) > 0:
+                stream.write(chunks.pop(0), frame_chunk)
+    except KeyboardInterrupt:
+        stream.stop_stream()
+        stream.close()
+        audio.terminate()
     # Stop the Thread
     client.loop_stop()
 
@@ -160,13 +164,14 @@ def get_gamer_audio():
         # reconnect then subscriptions will be renewed.
         client.subscribe(MQTT_RECEIVE)
 
-    global data
-    data = None
+    global chunks
+    chunks = []
     # The callback for when a PUBLISH message is received from the server.
     def on_message(client, userdata, msg):
-        global data
+        global chunks
         # Decoding the message
         data = base64.b64decode(msg.payload)
+        chunks.append(data)
 
     client = mqtt.Client()
     client.on_connect = on_connect
@@ -178,15 +183,18 @@ def get_gamer_audio():
     audio_format=pyaudio.paInt16
     channels=1
     rate=44100
-    frame_chunk=4096
+    frame_chunk=1024
     stream = audio.open(format=audio_format, channels=channels, rate=rate, output=True, frames_per_buffer=frame_chunk)
     # Starting thread which will receive the frames
     client.loop_start()
-    while True:
-        if(data != None):
-            stream.write(data)
-        if cv.waitKey(1) & 0xFF == ord('q'):
-            break
+    try: 
+        while True:
+            if len(chunks) > 0:
+                stream.write(chunks.pop(0), frame_chunk)
+    except KeyboardInterrupt:
+        stream.stop_stream()
+        stream.close()
+        audio.terminate()
     # Stop the Thread
     client.loop_stop()
 
