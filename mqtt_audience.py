@@ -26,14 +26,14 @@ FRAME_Y = int(args.Axis_Y)
 PING_TEST_MODE = bool(args.Ping_test)
 
 FORMAT = '%(asctime)s %(levelname)s: %(message)s'
-logging.basicConfig(level=logging.DEBUG, filename='audience.log', filemode='w', format=FORMAT)
+logging.basicConfig(level=logging.DEBUG, filename='log/audience.log', filemode='w', format=FORMAT)
 
 
 
 def get_streamer():
     MQTT_RECEIVE = "video/streamer"
     global frame 
-    frame = cv.imread('wait_for_streamer.jpg')
+    frame = cv.imread('image/wait_for_streamer.jpg')
     frame = cv.resize(frame, (FRAME_X, FRAME_Y), interpolation=cv.INTER_AREA)
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(client, userdata, flags, rc):
@@ -96,17 +96,13 @@ def get_streamer_audio():
     client.connect(MQTT_BROKER, 10127, 60)
 
     audio = pyaudio.PyAudio()
-    audio_format=pyaudio.paInt16
-    channels=1
-    rate=44100
-    frame_chunk=1024
-    stream = audio.open(format=audio_format, channels=channels, rate=rate, output=True, frames_per_buffer=frame_chunk)
+    stream = audio.open(format=pyaudio.paInt16, channels=1, rate=44100, output=True, frames_per_buffer=1024)
     # Starting thread which will receive the frames
     client.loop_start()
     try:
         while True:
             if len(chunks) > 0:
-                stream.write(chunks.pop(0), frame_chunk)
+                stream.write(chunks.pop(0), 1024)
     except KeyboardInterrupt:
         stream.stop_stream()
         stream.close()
@@ -117,7 +113,7 @@ def get_streamer_audio():
 def get_gamer():
     MQTT_RECEIVE = "video/gamer"
     global frame 
-    frame = cv.imread('wait_for_gamer.jpg')
+    frame = cv.imread('image/wait_for_gamer.jpg')
     frame = cv.resize(frame, (FRAME_X, FRAME_Y), interpolation=cv.INTER_AREA)
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(client, userdata, flags, rc):
@@ -180,17 +176,13 @@ def get_gamer_audio():
     client.connect(MQTT_BROKER, 10127, 60)
 
     audio = pyaudio.PyAudio()
-    audio_format=pyaudio.paInt16
-    channels=1
-    rate=44100
-    frame_chunk=1024
-    stream = audio.open(format=audio_format, channels=channels, rate=rate, output=True, frames_per_buffer=frame_chunk)
+    stream = audio.open(format=pyaudio.paInt16, channels=1, rate=44100, output=True, frames_per_buffer=1024)
     # Starting thread which will receive the frames
     client.loop_start()
     try: 
         while True:
             if len(chunks) > 0:
-                stream.write(chunks.pop(0), frame_chunk)
+                stream.write(chunks.pop(0), 1024)
     except KeyboardInterrupt:
         stream.stop_stream()
         stream.close()
@@ -244,7 +236,7 @@ if __name__ == '__main__':
     define_layout(window, cols=1, rows=2)
     define_layout([div1, div2])
 
-    img = Image.open('./start.png')
+    img = Image.open('image/start.png')
     #img = img.resize( (img.width // 2, img.height // 2) )
     imgTk =  ImageTk.PhotoImage(img)
     label_image = tk.Label(div1, bg='orange', image=imgTk)

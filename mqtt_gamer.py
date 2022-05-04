@@ -20,7 +20,7 @@ parser.add_argument("-q", "--quality", help="Set the frame quality", type=int, d
 args = parser.parse_args()
 
 FORMAT = '%(asctime)s %(levelname)s: %(message)s'
-logging.basicConfig(level=logging.WARNING, filename='gamer.log', filemode='w', format=FORMAT)
+logging.basicConfig(level=logging.WARNING, filename='log/gamer.log', filemode='w', format=FORMAT)
 
 # Constant
 CAMARA_STREAM = int(1)
@@ -115,14 +115,10 @@ def post_gamer_audio():
     client.on_publish = on_publish
 
     audio = pyaudio.PyAudio()
-    audio_format=pyaudio.paInt16
-    channels=1
-    rate=44100
-    frame_chunk=1024
-    stream = audio.open(format=audio_format, channels=channels, rate=rate, input=True, frames_per_buffer=frame_chunk)
+    stream = audio.open(format=pyaudio.paInt16, channels=1, rate=44100, input=True, frames_per_buffer=1024)
     try: 
         while True:
-            data = stream.read(frame_chunk)
+            data = stream.read(1024)
             audio_as_text = base64.b64encode(data)
             result = client.publish(MQTT_SEND, audio_as_text)
             if result[0] == 4:
@@ -177,7 +173,7 @@ if __name__ == '__main__':
     define_layout(window, cols=1, rows=3)
     define_layout([div1, div2, div3])
 
-    img = Image.open('./start.png')
+    img = Image.open('image/start.png')
     # img = img.resize( (img.width // 2, img.height // 2) )
     imgTk =  ImageTk.PhotoImage(img)
     label_image = tk.Label(div1, bg='orange', image=imgTk)

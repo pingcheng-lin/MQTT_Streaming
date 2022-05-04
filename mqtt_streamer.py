@@ -20,7 +20,7 @@ parser.add_argument("-q", "--quality", help="Set the frame quality", type=int, d
 args = parser.parse_args()
 
 FORMAT = '%(asctime)s %(levelname)s: %(message)s'
-logging.basicConfig(level=logging.WARNING, filename='streamer.log', filemode='w', format=FORMAT)
+logging.basicConfig(level=logging.WARNING, filename='log/streamer.log', filemode='w', format=FORMAT)
 
 # Constant
 CAMARA_STREAM = int(1)
@@ -117,14 +117,10 @@ def post_streamer_audio():
     client.on_publish = on_publish
 
     audio = pyaudio.PyAudio()
-    audio_format=pyaudio.paInt16
-    channels=1
-    rate=44100
-    frame_chunk=1024
-    stream = audio.open(format=audio_format, channels=channels, rate=rate, input=True, frames_per_buffer=frame_chunk)
+    stream = audio.open(format=pyaudio.paInt16, channels=1, rate=44100, input=True, frames_per_buffer=1024)
     try: 
         while True:
-            data = stream.read(frame_chunk)
+            data = stream.read(1024)
             audio_as_text = base64.b64encode(data)
             result = client.publish(MQTT_SEND, audio_as_text)
             if result[0] == 4:
@@ -137,7 +133,7 @@ def post_streamer_audio():
 def get_gamer():
     MQTT_RECEIVE = "video/gamer"
     global frame 
-    frame = cv.imread('wait_for_gamer.jpg')
+    frame = cv.imread('image/wait_for_gamer.jpg')
     frame = cv.resize(frame, (800, 600), interpolation=cv.INTER_AREA)
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(client, userdata, flags, rc):
@@ -197,17 +193,13 @@ def get_gamer_audio():
     client.connect(MQTT_BROKER, 10127, 60)
 
     audio = pyaudio.PyAudio()
-    audio_format=pyaudio.paInt16
-    channels=1
-    rate=44100
-    frame_chunk=1024
-    stream = audio.open(format=audio_format, channels=channels, rate=rate, output=True, frames_per_buffer=frame_chunk)
+    stream = audio.open(format=pyaudio.paInt16, channels=1, rate=44100, output=True, frames_per_buffer=1024)
     # Starting thread which will receive the frames
     client.loop_start()
     try:
         while True:
             if len(chunks) > 0:
-                stream.write(chunks.pop(0), frame_chunk)
+                stream.write(chunks.pop(0), 1024)
     except KeyboardInterrupt:
         stream.stop_stream()
         stream.close()
@@ -260,7 +252,7 @@ if __name__ == '__main__':
     define_layout(window, cols=1, rows=3)
     define_layout([div1, div2, div3])
 
-    img = Image.open('./start.png')
+    img = Image.open('image/start.png')
     #img = img.resize( (img.width // 2, img.height // 2) )
     imgTk =  ImageTk.PhotoImage(img)
     label_image = tk.Label(div1, bg='orange', image=imgTk)
