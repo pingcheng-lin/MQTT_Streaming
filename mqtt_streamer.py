@@ -76,7 +76,7 @@ def post_streamer(MODE):
                 frame = np.array(screen)
                 frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
                 frame = cv.resize(frame, (FRAME_X, FRAME_Y), interpolation=cv.INTER_NEAREST)
-
+                frame = cv.flip(frame, 1)
             # Encoding the Frame
             _, buffer = cv.imencode('.jpg', frame, encoding_parameters)
             # Converting into encoded bytes
