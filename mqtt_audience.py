@@ -87,7 +87,8 @@ def get_streamer_audio():
         global chunks
         # Decoding the message
         data = base64.b64decode(msg.payload)
-        chunks.append(data)
+        if(len(chunks) < 3):
+            chunks.append(data)
 
     client = mqtt.Client()
     client.on_connect = on_connect
@@ -167,7 +168,8 @@ def get_gamer_audio():
         global chunks
         # Decoding the message
         data = base64.b64decode(msg.payload)
-        chunks.append(data)
+        if(len(chunks) < 3):
+            chunks.append(data)
 
     client = mqtt.Client()
     client.on_connect = on_connect
